@@ -1,0 +1,24 @@
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+FILINGS_DIR = DATA_DIR / "filings"
+PRICES_DIR = DATA_DIR / "prices"
+CLASSIFIED_DIR = DATA_DIR / "classified"
+INDEXES_DIR = DATA_DIR / "indexes"
+
+for d in (FILINGS_DIR, PRICES_DIR, CLASSIFIED_DIR, INDEXES_DIR):
+    d.mkdir(parents=True, exist_ok=True)
+
+FORM_TYPES = ["8-K"]
+SEC_RATE_LIMIT_PER_SEC = 8
+
+CLASSIFIER_MODEL = "claude-haiku-4-5-20251001"
+CLASSIFIER_MAX_TOKENS = 512
+CLASSIFIER_BODY_CHAR_LIMIT = 8000
+
+HOLDING_PERIODS_DAYS = [1, 3, 5, 10, 20]
+SLIPPAGE_BPS = 25
+COMMISSION_PER_TRADE = 0.0
+
+OOS_CUTOFF_DATE = "2026-02-01"

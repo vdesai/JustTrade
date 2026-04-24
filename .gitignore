@@ -1,0 +1,31 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# Secrets — NEVER commit
+*.key
+*.pem
+secrets/
+
+# Large data that can be regenerated
+data/filings/
+data/indexes/
+data/prices/
+data/cik_to_ticker.json
+data/shortable_map.json
+
+# Live state (contains current positions)
+data/paper_trader_state.json
+state.json
+
+# Logs (may contain trade details)
+logs/
+data/launchd_stdout.log
+data/launchd_stderr.log
+
+# Resume build artifacts
+resume_updates/*.pdf
