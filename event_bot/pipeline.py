@@ -39,7 +39,9 @@ def classify_filing(
             return None
         ticker = cik_to_ticker.get(filing.cik, parsed.ticker) or ""
         anon = anonymize.anonymize(parsed.body_text, company_name=filing.company_name, ticker=ticker)
-        result = classifier.classify(anon, items=parsed.items)
+        result = classifier.classify(
+            anon, items=parsed.items, accession=filing.accession, ticker=ticker
+        )
         return ClassifiedEvent(
             cik=filing.cik,
             ticker=ticker,

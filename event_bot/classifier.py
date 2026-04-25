@@ -6,6 +6,8 @@ from typing import Optional
 
 import anthropic
 from dotenv import load_dotenv
+from langsmith import traceable
+from langsmith.wrappers import wrap_anthropic
 
 from event_bot import config
 
@@ -20,7 +22,10 @@ def _get_client() -> anthropic.Anthropic:
         key = os.getenv("ANTHROPIC_API_KEY")
         if not key or key.startswith("sk-ant-..."):
             raise RuntimeError("ANTHROPIC_API_KEY missing or placeholder in .env")
-        _client = anthropic.Anthropic(api_key=key)
+        raw_client = anthropic.Anthropic(api_key=key)
+        # wrap_anthropic auto-captures every API call as a LangSmith trace span
+        # (token counts, latency, prompts, completions). No-op if LANGSMITH_TRACING is unset.
+        _client = wrap_anthropic(raw_client) if os.getenv("LANGSMITH_TRACING") else raw_client
     return _client
 
 
@@ -114,7 +119,19 @@ def _parse_response(text: str) -> Classification:
     )
 
 
-def classify(anonymized_body: str, items: list[str] | None = None) -> Classification:
+@traceable(run_type="chain", name="classify_filing")
+def classify(
+    anonymized_body: str,
+    items: list[str] | None = None,
+    accession: str | None = None,
+    ticker: str | None = None,
+) -> Classification:
+    """Classify an anonymized SEC 8-K filing.
+
+    LangSmith captures: inputs, outputs, latency. accession + ticker are
+    passed through purely for trace metadata (so we can filter dashboard
+    by ticker / find a specific filing's trace).
+    """
     body = anonymized_body[: config.CLASSIFIER_BODY_CHAR_LIMIT]
     item_header = ""
     if items:

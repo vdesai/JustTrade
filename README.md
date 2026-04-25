@@ -72,6 +72,23 @@ Three of four are **contrarian** — the classifier reads these events as bullis
 
 Expected edge per trade: **~1-3% market-adjusted** over 5 days. Expected frequency: **~20-40 trades/month**.
 
+## Evaluation & Observability
+
+Every classification call is captured as a LangSmith trace using `@traceable` + `wrap_anthropic`. Each trace records inputs (anonymized filing body, items, accession, ticker), outputs (event type, sentiment, confidence, tradability, rationale), token counts, latency, and cost.
+
+![LangSmith trace dashboard for justtrade — showing classify_filing trace with ChatAnthropic child span, inputs, outputs, and metadata](docs/langsmith_traces.png)
+
+The trace metadata (accession + ticker) makes it trivial to filter the dashboard for a single filing or company, and to spot classification drift over time. This is the foundation for the eval workflow: golden datasets → LLM-as-judge → regression tests on prompt changes.
+
+```python
+# event_bot/classifier.py — instrumented classifier
+@traceable(run_type="chain", name="classify_filing")
+def classify(anonymized_body, items=None, accession=None, ticker=None):
+    client = _get_client()  # wrapped via wrap_anthropic — auto-traces every API call
+    resp = client.messages.create(...)
+    return _parse_response(resp.content)
+```
+
 ## Repo layout
 
 ```
