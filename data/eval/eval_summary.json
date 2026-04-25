@@ -1,0 +1,65 @@
+{
+  "n_total": 200,
+  "layer1": {
+    "n_evaluable": 198,
+    "pass": 169,
+    "accuracy": 0.8535353535353535
+  },
+  "layer2": {
+    "n_evaluable": 186,
+    "pass": 59,
+    "accuracy": 0.3172043010752688,
+    "by_event_type": {
+      "m_and_a_target": {
+        "n": 11,
+        "accuracy": 0.36363636363636365
+      },
+      "earnings_inline": {
+        "n": 17,
+        "accuracy": 0.29411764705882354
+      },
+      "material_agreement": {
+        "n": 11,
+        "accuracy": 0.0
+      },
+      "other": {
+        "n": 24,
+        "accuracy": 0.2916666666666667
+      },
+      "exec_departure": {
+        "n": 25,
+        "accuracy": 0.44
+      },
+      "exec_appointment": {
+        "n": 21,
+        "accuracy": 0.23809523809523808
+      },
+      "stock_offering": {
+        "n": 9,
+        "accuracy": 0.7777777777777778
+      },
+      "dividend_initiated_or_raised": {
+        "n": 5,
+        "accuracy": 0.2
+      },
+      "earnings_beat": {
+        "n": 20,
+        "accuracy": 0.3
+      },
+      "earnings_miss": {
+        "n": 9,
+        "accuracy": 0.3333333333333333
+      },
+      "clinical_trial_positive": {
+        "n": 9,
+        "accuracy": 0.3333333333333333
+      }
+    }
+  },
+  "layer3": {
+    "n_evaluable": 30,
+    "event_type_accuracy": 0.8333333333333334,
+    "sentiment_accuracy": 0.9,
+    "avg_rationale_quality": 3.6333333333333333
+  }
+}

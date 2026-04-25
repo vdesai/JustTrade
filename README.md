@@ -78,8 +78,6 @@ Every classification call is captured as a LangSmith trace using `@traceable` + 
 
 ![LangSmith trace dashboard for justtrade — showing classify_filing trace with ChatAnthropic child span, inputs, outputs, and metadata](docs/langsmith_traces.png)
 
-The trace metadata (accession + ticker) makes it trivial to filter the dashboard for a single filing or company, and to spot classification drift over time. This is the foundation for the eval workflow: golden datasets → LLM-as-judge → regression tests on prompt changes.
-
 ```python
 # event_bot/classifier.py — instrumented classifier
 @traceable(run_type="chain", name="classify_filing")
@@ -88,6 +86,39 @@ def classify(anonymized_body, items=None, accession=None, ticker=None):
     resp = client.messages.create(...)
     return _parse_response(resp.content)
 ```
+
+### Three-layer eval system
+
+Beyond observability, a 3-layer automated grader (`event_bot/eval_layers.py`) measures classifier quality on three axes that fail in different ways. The key methodological point: **the eval has to be independent of the thing being tested, or it's circular.**
+
+| Layer | Source of truth | Independence | What it catches |
+|---|---|---|---|
+| 1. Event-family smoke test | SEC item codes (regex extract) | Same doc, different reasoning method | Gross hallucinations |
+| 2. Market-derived sentiment | 5-day forward stock return | **Truly independent** (future data, classifier can't see) | Whether classification predicts the market |
+| 3. LLM-as-judge | Claude Opus (different model than Haiku classifier) | Different model, different blind spots | Subtle subtype errors, rationale quality |
+
+### Results (200 OOS filings, Q1 2026)
+
+```
+LAYER 1 — Event family smoke test                  85.4% accuracy (169/198)
+LAYER 2 — Market-derived sentiment (strongest)     31.7% accuracy ( 59/186)
+LAYER 3 — Claude Opus as LLM judge (n=30)          83.3% event_type / 90% sentiment
+
+Layer 2 by event_type (where n >= 5):
+  stock_offering         n= 9   77.8%   ← real edge
+  exec_departure         n=25   44.0%
+  earnings_beat          n=20   30.0%   ← random
+  material_agreement     n=11    0.0%   ← consistent contrarian inversion
+```
+
+**Reading the results:** Layers 1 and 3 agree the classifier reads filings well (~85-90%). But Layer 2 is barely above random — the classifier's sentiment doesn't predict the market over 5 days. Conclusion: the classifier itself is solid, but market direction over a 5-day window is too noisy to predict from filing sentiment alone. This is the kind of finding only a properly layered eval can surface; a single-axis eval would have either declared success (Layers 1/3) or failure (Layer 2) without the nuance.
+
+Run it yourself:
+```bash
+python run_eval.py --sample 200 --layer3-subsample 30
+```
+
+Results are pushed as a LangSmith Dataset for visual inspection and for tracking accuracy regressions on future prompt changes.
 
 ## Repo layout
 
